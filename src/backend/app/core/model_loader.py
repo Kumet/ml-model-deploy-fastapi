@@ -4,8 +4,11 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import structlog
 
 from .config import settings
+
+logger = structlog.get_logger(__name__)
 
 _MODEL: Any | None = None
 _META: dict[str, str] = {}
@@ -26,6 +29,7 @@ def load_model(force: bool = False):
         "version": settings.model_version,
         "path": str(path.resolve()),
     }
+    logger.info("model_loaded", path=str(path.resolve()), version=settings.model_version)
     return _MODEL
 
 

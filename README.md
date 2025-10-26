@@ -40,7 +40,25 @@ docker compose up --build
 |------|--------|------|
 | `/health` | GET | 稼働確認。`{"status": "ok"}` を返します。 |
 | `/model/info` | GET | モデル名・バージョン・パスを返します。 |
-| `/predict` | POST | `{"features": [数値...]}` を受け取り、`{"label": int, "proba": float}` を返します。 |
+| `/auth/token` | POST | 認証用トークンを発行します。 |
+| `/predict` | POST | `{"features": [数値...]}` を受け取り、`{"label": int, "proba": float}` を返します。Bearer トークン必須。 |
+
+## 認証
+```bash
+curl -X POST http://localhost:8000/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "changeme"}'
+
+# => {"access_token": "...", "token_type": "bearer"}
+
+curl -X POST http://localhost:8000/predict \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"features": [5.1, 3.5, 1.4, 0.2]}'
+```
+
+## ログ
+`structlog` で JSON 形式のリクエストログを出力します。`LOG_LEVEL` を変更すると詳細度を制御できます。
 
 ## テスト & 品質ゲート
 ```bash
@@ -79,6 +97,12 @@ PR 作成時に GitHub Actions (`.github/workflows/ci.yml`) が以下を検証�
 APP_ENV=local
 PORT=8000
 MODEL_PATH=models/model.joblib
+LOG_LEVEL=INFO
+API_USERNAME=admin
+API_PASSWORD=changeme
+JWT_SECRET=super-secret-key
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=30
 ```
 
 ## 次のステップ
