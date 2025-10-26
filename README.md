@@ -1,6 +1,9 @@
 # ML Model Deploy (FastAPI)
 
-![CI](https://github.com/OWNER/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml)
+[![Auto Review](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml)
+![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 
 FastAPI と scikit-learn で学習済みモデルを提供する最小構成テンプレートです。
 依存管理は `uv`、品質ゲートは `ruff` + `black` + `pytest`、配布は `Docker Compose` を想定しています。
