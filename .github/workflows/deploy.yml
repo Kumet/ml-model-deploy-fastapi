@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "デプロイ先 Render 環境名 (例: production)"
+        required: false
+        default: production
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Run smoke tests
+        run: uv run pytest src/backend/tests/test_health.py src/backend/tests/test_predict.py
+        env:
+          PYTHONPATH: src
+          MODEL_PATH: models/model.joblib
+          API_USERNAME: admin
+          API_PASSWORD: changeme
+          JWT_SECRET: super-secret-key
+          JWT_ALGORITHM: HS256
+          JWT_EXPIRE_MINUTES: 30
+          LOG_LEVEL: INFO
+
+      - name: Trigger Render deployment
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          RENDER_ENVIRONMENT: ${{ inputs.environment || 'production' }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK secret is not set. Please configure it in the repository settings."
+            exit 1
+          fi
+          echo "Triggering Render deploy hook..."
+          curl -fsSL -X POST "$RENDER_DEPLOY_HOOK"
+          echo "Render deploy initiated for environment: ${RENDER_ENVIRONMENT}"
