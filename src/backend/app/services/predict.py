@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import numpy as np
+import structlog
 
 from ..core.model_loader import get_model
+
+logger = structlog.get_logger(__name__)
 
 
 def predict_proba(features: list[float]) -> tuple[int, float]:
@@ -19,4 +22,5 @@ def predict_proba(features: list[float]) -> tuple[int, float]:
         proba = 1.0
 
     label = int(model.predict(sample)[0])
+    logger.debug("predict_proba", label=label, proba=proba)
     return label, proba

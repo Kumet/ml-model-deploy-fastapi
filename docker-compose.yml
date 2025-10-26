@@ -7,6 +7,12 @@ services:
       - PORT=8000
       - MODEL_PATH=models/model.joblib
       - APP_ENV=docker
+      - LOG_LEVEL=INFO
+      - API_USERNAME=admin
+      - API_PASSWORD=changeme
+      - JWT_SECRET=super-secret-key
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE_MINUTES=30
       - PYTHONPATH=src
     volumes:
       - ./:/app

@@ -7,10 +7,16 @@ def test_model_info(client):
     assert meta["path"].endswith("model.joblib")
 
 
-def test_predict(client):
+def test_predict(client, auth_headers):
     payload = {"features": [5.1, 3.5, 1.4, 0.2]}
-    response = client.post("/predict", json=payload)
+    response = client.post("/predict", json=payload, headers=auth_headers)
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body["label"], int)
     assert 0 <= body["proba"] <= 1
+
+
+def test_predict_unauthorized(client):
+    payload = {"features": [5.1, 3.5, 1.4, 0.2]}
+    response = client.post("/predict", json=payload)
+    assert response.status_code == 403 or response.status_code == 401
