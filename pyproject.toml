@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ml-model-deploy-fastapi"
+version = "0.1.0"
+requires-python = ">=3.12"
+description = "FastAPI で scikit-learn モデルをデプロイするテンプレート"
+authors = [{ name = "ml-team" }]
+readme = "README.md"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic",
+  "pydantic-settings",
+  "numpy",
+  "scikit-learn",
+  "joblib",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/backend"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/backend", "models", "README.md", ".env.example"]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "httpx",
+  "ruff",
+  "black",
+  "pre-commit",
+]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["dist", "build", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
