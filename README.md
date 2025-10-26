@@ -58,7 +58,7 @@ curl -X POST http://localhost:8000/predict \
 ```
 
 ## ログ
-`structlog` で JSON 形式のリクエストログを出力します。`LOG_LEVEL` を変更すると詳細度を制御できます。
+`structlog` で JSON 形式のアクセスログを出力し、`request_id` / `input_id` / `latency_ms` を `/predict` のレスポンスログに付与します。`LOG_LEVEL` を変更すると詳細度を制御でき、可観測性基盤（CloudWatch Logs, Loki 等）での集計が容易です。
 
 ## テスト & 品質ゲート
 ```bash
@@ -100,10 +100,16 @@ MODEL_PATH=models/model.joblib
 LOG_LEVEL=INFO
 API_USERNAME=admin
 API_PASSWORD=changeme
+API_USERNAME_FILE=
+API_PASSWORD_FILE=
 JWT_SECRET=super-secret-key
+JWT_SECRET_FILE=
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=30
 ```
+
+`*_FILE` 変数にパスを設定すると、Docker Secrets や Vault Agent などが配置したファイルから値を読み込みます。例：`API_PASSWORD_FILE=/run/secrets/ml_api_password`。クラウドの Secrets Manager を使用する場合は CI/CD でファイルを作成する、またはコンテナにバインドマウントすることで対応できます。
+
 
 ## 次のステップ
 - 推論サービス (`src/backend/app/services/`) にビジネスロジックを追加

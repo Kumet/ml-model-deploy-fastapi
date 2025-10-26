@@ -1,3 +1,8 @@
+import hashlib
+import json
+import uuid
+from time import perf_counter
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -41,11 +46,38 @@ def issue_token(payload: TokenRequest):
 
 @router.post("/predict", response_model=PredictResponse)
 def predict(payload: PredictRequest, _: str = Depends(get_current_user)):
+    request_id = uuid.uuid4().hex
+    input_id = hashlib.sha256(json.dumps(payload.features, sort_keys=True).encode()).hexdigest()
+    start = perf_counter()
     try:
         label, proba = predict_proba(payload.features)
-        logger.info("prediction_made", label=label, proba=proba)
+        duration_ms = (perf_counter() - start) * 1000
+        logger.info(
+            "prediction_made",
+            request_id=request_id,
+            input_id=input_id,
+            label=label,
+            proba=proba,
+            latency_ms=round(duration_ms, 2),
+        )
         return PredictResponse(label=label, proba=proba)
     except ValueError as exc:
+        duration_ms = (perf_counter() - start) * 1000
+        logger.warning(
+            "prediction_validation_error",
+            request_id=request_id,
+            input_id=input_id,
+            latency_ms=round(duration_ms, 2),
+            error=str(exc),
+        )
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
+        duration_ms = (perf_counter() - start) * 1000
+        logger.error(
+            "prediction_failed",
+            request_id=request_id,
+            input_id=input_id,
+            latency_ms=round(duration_ms, 2),
+            error=str(exc),
+        )
         raise HTTPException(status_code=400, detail=str(exc)) from exc
