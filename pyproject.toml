@@ -19,6 +19,7 @@ dependencies = [
   "joblib",
   "PyJWT",
   "structlog",
+  "mlflow",
 ]
 
 [tool.hatch.build.targets.wheel]
