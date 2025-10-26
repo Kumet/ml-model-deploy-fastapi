@@ -21,4 +21,4 @@ jobs:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
-          uv run ruff check . --output-format=github | reviewdog -f=github -name="ruff" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false
+          uv run ruff check . --output-format=rdjson | reviewdog -f=rdjson -name="ruff" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false
