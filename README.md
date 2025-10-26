@@ -98,6 +98,11 @@ PR 作成時に GitHub Actions (`.github/workflows/ci.yml`) が以下を検証�
 
 また、`.github/workflows/auto-review.yml` が PR 上で `ruff` の指摘を reviewdog 経由で自動レビューします。
 
+## デプロイ
+- `.github/workflows/deploy.yml` は main への push または手動トリガー (`workflow_dispatch`) で Render のデプロイフックを叩きます。
+- リポジトリの Secrets に `RENDER_DEPLOY_HOOK` を登録してください（Render の Dashboard > Service Settings > Deploy Hook URL）。
+- 手動実行例: `gh workflow run deploy.yml -f environment=production`
+
 ## 環境変数 (例: `.env`)
 ```
 APP_ENV=local
