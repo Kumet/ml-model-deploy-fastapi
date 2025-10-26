@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml)
 [![Auto Review](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml)
+[![Deploy](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 
