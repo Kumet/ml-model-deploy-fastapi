@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MODEL_PATH=models/model.joblib
+      - APP_ENV=docker
+      - PYTHONPATH=src
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "uv run python models/prepare_model.py &&
+             uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"
