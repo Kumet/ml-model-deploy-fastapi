@@ -2,108 +2,111 @@
 
 [![CI](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml)
 [![Auto Review](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml)
+[![Deploy](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 
-FastAPI と scikit-learn で学習済みモデルを提供する最小構成テンプレートです。
-依存管理は `uv`、品質ゲートは `ruff` + `black` + `pytest`、配布は `Docker Compose` を想定しています。
+FastAPI と scikit-learn を組み合わせた **ML 推論 API のプロダクションテンプレート** です。`uv` ベースの軽量な開発体験、`ruff` / `black` / `pytest` による品質ゲート、`MLflow` 連携による実験管理、Render へのデプロイ Workflow まで揃えた「そのまま案件に持ち込める」構成を目指しています。
 
-## 主な構成
+## 目次
+- [特徴](#特徴)
+- [プロジェクト構成](#プロジェクト構成)
+- [クイックスタート](#クイックスタート)
+- [API](#api)
+- [品質とオブザーバビリティ](#品質とオブザーバビリティ)
+- [Makefile コマンド](#makefile-コマンド)
+- [GitHub Actions](#github-actions)
+- [デプロイ (Render)](#デプロイ-render)
+- [環境変数](#環境変数)
+
+## 特徴
+- ⚡️ **FastAPI + scikit-learn**: Iris モデルを教材に、最小で拡張しやすい推論 API を実装。
+- 🔐 **Bearer 認証**: `/auth/token` で JWT を払い出し、 `/predict` を認証下に保護。
+- 📈 **可観測性**: `structlog` で JSON ログ（`request_id` / `input_id` / `latency_ms`）を出力。MLflow で精度やモデルを履歴管理。
+- 🧪 **品質ゲート**: Lint / Format / Test を CI で自動検証。pre-commit も同梱。
+- 🚀 **デプロイ Workflow**: Render の Deploy Hook を叩く GitHub Actions を提供。
+
+## プロジェクト構成
 ```
 ml-model-deploy-fastapi/
-├─ src/backend/app/        # FastAPI アプリ本体
-│  ├─ api/                 # ルーティングとスキーマ
-│  ├─ core/                # 設定・モデル読み込み
-│  └─ services/            # 推論ロジック
-├─ src/backend/tests/      # pytest
-├─ models/                 # モデル生成スクリプトと成果物
-└─ .github/workflows/ci.yml
+├─ models/
+│  ├─ prepare_model.py   # MLflow ログ付きのモデル学習スクリプト
+│  └─ model.joblib       # 学習済みモデル (生成物)
+├─ src/backend/app/
+│  ├─ api/               # FastAPI ルーティング & スキーマ
+│  ├─ core/              # 設定・認証・ロギング
+│  └─ services/          # 推論ロジック
+├─ src/backend/tests/    # pytest
+├─ Makefile              # ショートカットコマンド
+└─ .github/workflows/    # CI / Auto Review / Deploy
 ```
 
-## セットアップ
+## クイックスタート
 ```bash
-uv sync --frozen
-cp .env.example .env
-uv run python models/prepare_model.py
+uv sync --frozen                 # 依存インストール
+cp .env.example .env             # 環境変数テンプレート
+uv run python models/prepare_model.py  # モデル学習 + MLflow 連携
 uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
-ブラウザで http://localhost:8000/docs を開き、OpenAPI から動作確認できます。
+OpenAPI UI: http://localhost:8000/docs
 
-## Docker Compose
+### Docker Compose
 ```bash
 docker compose up --build
 ```
-初回起動時は `models/model.joblib` が生成され、Uvicorn が 8000 番ポートで公開されます。
+初回起動時に `models/model.joblib` が生成され、8000 番ポートで API が公開されます。
 
-## API 仕様
+## API
 | Path | Method | 説明 |
 |------|--------|------|
-| `/health` | GET | 稼働確認。`{"status": "ok"}` を返します。 |
-| `/model/info` | GET | モデル名・バージョン・パスを返します。 |
-| `/auth/token` | POST | 認証用トークンを発行します。 |
-| `/predict` | POST | `{"features": [数値...]}` を受け取り、`{"label": int, "proba": float}` を返します。Bearer トークン必須。 |
+| `/health` | GET | ヘルスチェック。`{"status": "ok"}` を返却 |
+| `/model/info` | GET | モデル名・バージョン・格納パスを返却 |
+| `/auth/token` | POST | 認証用トークン (Bearer) を発行 |
+| `/predict` | POST | 特徴量配列を受け取り、`{"label": int, "proba": float}` を返却 (要トークン) |
 
-## 認証
 ```bash
+# トークン発行
 curl -X POST http://localhost:8000/auth/token \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "changeme"}'
 
-# => {"access_token": "...", "token_type": "bearer"}
-
+# 推論リクエスト
 curl -X POST http://localhost:8000/predict \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{"features": [5.1, 3.5, 1.4, 0.2]}'
 ```
 
-## ログ
-`structlog` で JSON 形式のアクセスログを出力し、`request_id` / `input_id` / `latency_ms` を `/predict` のレスポンスログに付与します。`LOG_LEVEL` を変更すると詳細度を制御でき、可観測性基盤（CloudWatch Logs, Loki 等）での集計が容易です。
+## 品質とオブザーバビリティ
+- **QA コマンド**: `uv run ruff check .`, `uv run black --check .`, `uv run pytest`
+- **ロギング**: `structlog` が JSON 形式で `request_id` / `input_id` / `latency_ms` を出力。`LOG_LEVEL` で詳細度を調整できます。
+- **MLflow**:
+  - `models/prepare_model.py` 実行時にメトリクス (accuracy) とモデルアーティファクトを記録。
+  - `MLFLOW_TRACKING_URI` を切り替えるだけで外部トラッキングサーバーへ接続可能。
+  - `make mlflow-ui` で `http://localhost:5000` に UI を起動。
 
-## MLflow 連携
-- `models/prepare_model.py` は MLflow にメトリクス（`accuracy`）とアーティファクト（学習済みモデル）を記録します。
-- `MLFLOW_TRACKING_URI` が未設定の場合は `file:mlruns` にローカル保存されます。
-- `make mlflow-ui` でトラッキング UI を起動し、ブラウザから実行履歴を確認できます。
-
-## テスト & 品質ゲート
-```bash
-uv run ruff check .
-uv run black --check .
-uv run pytest
-```
-
-## Makefile ショートカット
+## Makefile コマンド
 ```bash
 make install         # uv sync --frozen
-make prepare-model   # Iris モデルの再生成
-make qa              # ruff / black --check / pytest をまとめて実行
-make serve           # Uvicorn でローカル起動
-make docker-up       # Docker Compose で起動
-make mlflow-ui       # MLflow Tracking UI を http://localhost:5000 で起動
+make prepare-model   # モデル再生成 + MLflow ログ
+make qa              # ruff / black --check / pytest
+make serve           # Uvicorn サーバー起動
+make docker-up       # Docker Compose 起動
+make docker-down     # Docker Compose 停止
+make mlflow-ui       # MLflow UI を 0.0.0.0:5000 で起動
 ```
 
-## pre-commit
-```bash
-pre-commit install
-pre-commit run --all-files
-```
+## GitHub Actions
+- `ci.yml`: Lint / Format / Test を実行。
+- `auto-review.yml`: reviewdog + ruff が PR に自動コメント。
+- `deploy.yml`: Render の Deploy Hook をトリガー。`RENDER_DEPLOY_HOOK` シークレットを設定してください。
 
-## CI
-PR 作成時に GitHub Actions (`.github/workflows/ci.yml`) が以下を検証します。
-- `uv sync --frozen`
-- `models/prepare_model.py` によるモデル生成
-- `ruff check .`
-- `black --check .`
-- `pytest`
+## デプロイ (Render)
+- Render Dashboard で Deploy Hook URL を取得し、GitHub Secrets に `RENDER_DEPLOY_HOOK` として登録。
+- main への push もしくは手動実行 (`gh workflow run deploy.yml -f environment=production`) でデプロイを開始。
+- Workflow 内でヘルスチェック／推論テストを実行してから Render へ通知します。
 
-また、`.github/workflows/auto-review.yml` が PR 上で `ruff` の指摘を reviewdog 経由で自動レビューします。
-
-## デプロイ
-- `.github/workflows/deploy.yml` は main への push または手動トリガー (`workflow_dispatch`) で Render のデプロイフックを叩きます。
-- リポジトリの Secrets に `RENDER_DEPLOY_HOOK` を登録してください（Render の Dashboard > Service Settings > Deploy Hook URL）。
-- 手動実行例: `gh workflow run deploy.yml -f environment=production`
-
-## 環境変数 (例: `.env`)
+## 環境変数
 ```
 APP_ENV=local
 PORT=8000
@@ -122,11 +125,4 @@ MLFLOW_EXPERIMENT_NAME=iris-classifier
 MLFLOW_RUN_NAME=logreg-iris
 ```
 
-`*_FILE` 変数にパスを設定すると、Docker Secrets や Vault Agent などが配置したファイルから値を読み込みます。例：`API_PASSWORD_FILE=/run/secrets/ml_api_password`。クラウドの Secrets Manager を使用する場合は CI/CD でファイルを作成する、またはコンテナにバインドマウントすることで対応できます。
-
-`MLFLOW_*` の各変数を上書きすると、外部トラッキングサーバー（Databricks, SageMaker 等）へ容易に切り替えられます。
-
-
-## 次のステップ
-- 推論サービス (`src/backend/app/services/`) にビジネスロジックを追加
-- モデル更新タスクをスケジュールや CI に組み込み
+`*_FILE` 変数にファイルパスを設定すると、Docker Secrets や Vault Agent が配布したシークレットファイルを読み込みます。
