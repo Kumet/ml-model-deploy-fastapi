@@ -3,10 +3,11 @@
 [![CI](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml)
 [![Auto Review](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml)
 [![Deploy](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml)
+<br>
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 
-FastAPI と scikit-learn を組み合わせた **ML 推論 API のプロダクションテンプレート** です。`uv` ベースの軽量な開発体験、`ruff` / `black` / `pytest` による品質ゲート、`MLflow` 連携による実験管理、Render へのデプロイ Workflow まで揃えた「そのまま案件に持ち込める」構成を目指しています。
+FastAPI と scikit-learn を組み合わせた **ML 推論 API のプロダクションテンプレート** です。`uv` ベースの軽量な開発体験、`ruff` / `black` / `pytest` による品質ゲート、`MLflow` 連携による実験管理、Render へのデプロイ Workflow を備えています。
 
 ## 目次
 - [特徴](#特徴)
@@ -42,6 +43,8 @@ ml-model-deploy-fastapi/
 ```
 
 ## クイックスタート
+
+### 🧩 ステップ1: ローカルで動かす
 ```bash
 uv sync --frozen                 # 依存インストール
 cp .env.example .env             # 環境変数テンプレート
@@ -50,11 +53,17 @@ uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 OpenAPI UI: http://localhost:8000/docs
 
-### Docker Compose
+### 🐳 ステップ2: Docker Compose で動かす
 ```bash
 docker compose up --build
 ```
 初回起動時に `models/model.joblib` が生成され、8000 番ポートで API が公開されます。
+
+### 📈 ステップ3: MLflow UI で可視化
+```bash
+make mlflow-ui
+open http://localhost:5000
+```
 
 ## API
 | Path | Method | 説明 |
