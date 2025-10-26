@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/ci.yml)
 [![Auto Review](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/auto-review.yml)
-[![Deploy](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumet/ml-model-deploy-fastapi/actions/workflows/deploy.yml)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 
@@ -105,6 +104,7 @@ make mlflow-ui       # MLflow UI を 0.0.0.0:5000 で起動
 - Render Dashboard で Deploy Hook URL を取得し、GitHub Secrets に `RENDER_DEPLOY_HOOK` として登録。
 - main への push もしくは手動実行 (`gh workflow run deploy.yml -f environment=production`) でデプロイを開始。
 - Workflow 内でヘルスチェック／推論テストを実行してから Render へ通知します。
+- シークレット未設定のまま実行すると失敗ステータスになるため、利用前に Secrets を登録するか、必要になるまで Workflow を無効化してください。
 
 ## 環境変数
 ```
