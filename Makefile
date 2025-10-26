@@ -1,4 +1,4 @@
-.PHONY: install prepare-model lint format test qa serve docker-up docker-down pre-commit hooks
+.PHONY: install prepare-model lint format test qa serve docker-up docker-down pre-commit hooks mlflow-ui
 
 install:
 	uv sync --frozen
@@ -34,3 +34,6 @@ pre-commit:
 
 hooks:
 	uv run pre-commit install
+
+mlflow-ui:
+	uv run mlflow ui --backend-store-uri $${MLFLOW_TRACKING_URI:-file:mlruns} --host 0.0.0.0 --port 5000

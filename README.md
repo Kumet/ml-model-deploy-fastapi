@@ -60,6 +60,11 @@ curl -X POST http://localhost:8000/predict \
 ## ログ
 `structlog` で JSON 形式のアクセスログを出力し、`request_id` / `input_id` / `latency_ms` を `/predict` のレスポンスログに付与します。`LOG_LEVEL` を変更すると詳細度を制御でき、可観測性基盤（CloudWatch Logs, Loki 等）での集計が容易です。
 
+## MLflow 連携
+- `models/prepare_model.py` は MLflow にメトリクス（`accuracy`）とアーティファクト（学習済みモデル）を記録します。
+- `MLFLOW_TRACKING_URI` が未設定の場合は `file:mlruns` にローカル保存されます。
+- `make mlflow-ui` でトラッキング UI を起動し、ブラウザから実行履歴を確認できます。
+
 ## テスト & 品質ゲート
 ```bash
 uv run ruff check .
@@ -74,6 +79,7 @@ make prepare-model   # Iris モデルの再生成
 make qa              # ruff / black --check / pytest をまとめて実行
 make serve           # Uvicorn でローカル起動
 make docker-up       # Docker Compose で起動
+make mlflow-ui       # MLflow Tracking UI を http://localhost:5000 で起動
 ```
 
 ## pre-commit
@@ -106,9 +112,14 @@ JWT_SECRET=super-secret-key
 JWT_SECRET_FILE=
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=30
+MLFLOW_TRACKING_URI=file:mlruns
+MLFLOW_EXPERIMENT_NAME=iris-classifier
+MLFLOW_RUN_NAME=logreg-iris
 ```
 
 `*_FILE` 変数にパスを設定すると、Docker Secrets や Vault Agent などが配置したファイルから値を読み込みます。例：`API_PASSWORD_FILE=/run/secrets/ml_api_password`。クラウドの Secrets Manager を使用する場合は CI/CD でファイルを作成する、またはコンテナにバインドマウントすることで対応できます。
+
+`MLFLOW_*` の各変数を上書きすると、外部トラッキングサーバー（Databricks, SageMaker 等）へ容易に切り替えられます。
 
 
 ## 次のステップ
